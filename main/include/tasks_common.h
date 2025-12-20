@@ -1,0 +1,8 @@
+#ifndef TASKS_COMMON_H_
+#define TASKS_COMMON_H_
+
+#define UART_READ_TASK_STACK_SIZE 4096
+#define UART_READ_TASK_PRIORITY   5
+#define UART_READ_TASK_CORE_ID    0
+
+#endif
