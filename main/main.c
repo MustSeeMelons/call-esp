@@ -11,6 +11,15 @@ static const char *TAG = "SIM800L";
 
 #define BUTTON_GPIO GPIO_NUM_25
 
+// TODO this should be split - init stays here, phone call to BLE handlers
+static void do_phone() {
+  sim800l_with_retry("AT+CREG?", "0,1");
+
+  sim800l_task_start();
+
+  sim800l_send_cmd("ATD+37126312241;");
+}
+
 /**
  * Calls a phone number on EXT.
  *
@@ -38,32 +47,6 @@ void app_main(void) {
         ESP_LOGI(TAG, "SIM800L OK.");
     }
 
-    err = voltage_init();
+    
 
-    if (err != ESP_OK) {
-        ESP_LOGI(TAG, "ADC Init fail.");
-        return;
-    }
-
-    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_EXT0) {
-        ESP_LOGI(TAG, "Awoken");
-
-        sim800l_with_retry("AT+CREG?", "0,1");
-
-        sim800l_task_start();
-
-        sim800l_send_cmd("ATD+37126312241;");
-        vTaskDelay(pdMS_TO_TICKS(5000));
-
-        esp_deep_sleep_start();
-        ESP_LOGI(TAG, "Going to sleep...");
-    } else {
-
-        while (1) {
-            ESP_LOGI(TAG, "V: %f", read_battery_voltage());
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        }
-
-        esp_deep_sleep_start();
-    }
 }
