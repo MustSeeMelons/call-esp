@@ -4,6 +4,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "include/sim800l.h"
+#include "include/spi_display.h"
 #include "include/voltage.h"
 #include <stdio.h>
 
@@ -28,7 +29,6 @@ static void do_phone() {
  * AT+CPIN? - Pin/Puk check
  */
 void app_main(void) {
-    // TODO add a battery level check widh LEDS's and a resistor divider
     gpio_reset_pin(BUTTON_GPIO);
     gpio_set_direction(BUTTON_GPIO, GPIO_MODE_INPUT);
     gpio_pullup_en(BUTTON_GPIO);
@@ -47,6 +47,14 @@ void app_main(void) {
         ESP_LOGI(TAG, "SIM800L OK.");
     }
 
-    
+    err = init_spi_display();
 
+    if (err != ESP_OK) {
+        ESP_LOGI(TAG, "SPI Init fail.");
+        return;
+    } else {
+        ESP_LOGI(TAG, "SPI OK.");
+    }
+
+    do_display();
 }
