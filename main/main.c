@@ -3,58 +3,83 @@
 #include "esp_sleep.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "include/display.h"
 #include "include/sim800l.h"
-#include "include/spi_display.h"
 #include "include/voltage.h"
 #include <stdio.h>
 
-static const char *TAG = "SIM800L";
+static const char *TAG = "MAIN";
 
-#define BUTTON_GPIO GPIO_NUM_25
+#define BUTTON_GPIO GPIO_NUM_12
+static QueueHandle_t gpio_evt_queue;
+static void IRAM_ATTR gpio_isr_handler(void *arg);
 
-// TODO this should be split - init stays here, phone call to BLE handlers
-static void do_phone() {
-  sim800l_with_retry("AT+CREG?", "0,1");
+void gpio_interrupt_init(void) {
+    gpio_config_t io_conf = {
+        .pin_bit_mask = 1ULL << GPIO_NUM_12,
+        .mode = GPIO_MODE_INPUT,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_POSEDGE, // or NEGEDGE / ANYEDGE / LOW_LEVEL / HIGH_LEVEL
+    };
 
-  sim800l_task_start();
+    gpio_config(&io_conf);
 
-  sim800l_send_cmd("ATD+37126312241;");
+    gpio_install_isr_service(0);
+
+    gpio_isr_handler_add(GPIO_NUM_12, gpio_isr_handler, (void *)GPIO_NUM_12);
+}
+
+static void IRAM_ATTR gpio_isr_handler(void *arg) {
+    uint32_t pin = (uint32_t)arg;
+    xQueueSendFromISR(gpio_evt_queue, &pin, NULL);
 }
 
 /**
- * Calls a phone number on EXT.
- *
+ * this should be split - init stays here, phone call to BLE handlers
  * AT - Basic Check
  * AT+CSQ - Signal Check
  * AT+CPIN? - Pin/Puk check
  */
-void app_main(void) {
-    gpio_reset_pin(BUTTON_GPIO);
-    gpio_set_direction(BUTTON_GPIO, GPIO_MODE_INPUT);
-    gpio_pullup_en(BUTTON_GPIO);
+static void do_phone() {
+    sim800l_with_retry("AT+CREG?", "0,1");
 
-    // XXX multiple buttons would require 'esp_sleep_enable_ext1_wakeup', level high only:
-    // esp_sleep_enable_ext1_wakeup((1ULL<<32) | (1ULL<<33), ESP_EXT1_WAKEUP_ANY_HIGH);
-    esp_sleep_enable_ext0_wakeup(BUTTON_GPIO, 0);
+    sim800l_task_start();
+
+    sim800l_send_cmd("ATD+37126312241;");
+}
+
+void app_main(void) {
+    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+    gpio_interrupt_init();
 
     esp_err_t err = 0;
-    err = sim800l_init();
+    // err = sim800l_init();
+
+    // if (err != ESP_OK) {
+    //     ESP_LOGI(TAG, "SIM800L Init fail.");
+    //     return;
+    // } else {
+    //     ESP_LOGI(TAG, "SIM800L OK.");
+    // }
+
+    err = display_init();
 
     if (err != ESP_OK) {
-        ESP_LOGI(TAG, "SIM800L Init fail.");
+        ESP_LOGI(TAG, "Display Init fail.");
         return;
     } else {
-        ESP_LOGI(TAG, "SIM800L OK.");
+        ESP_LOGI(TAG, "Display OK.");
+        display_control_task_start();
+        display_run_task_start();
     }
 
-    err = init_spi_display();
+    display_cmd_send(0);
 
-    if (err != ESP_OK) {
-        ESP_LOGI(TAG, "SPI Init fail.");
-        return;
-    } else {
-        ESP_LOGI(TAG, "SPI OK.");
+    while (1) {
+        uint32_t pin;
+        if (xQueueReceive(gpio_evt_queue, &pin, portMAX_DELAY)) {
+            ESP_LOGI(TAG, "Hi!");
+        }
     }
-
-    do_display();
 }

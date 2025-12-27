@@ -1,0 +1,32 @@
+@use "variables.scss";
+
+body,
+html {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  font-size: 14px;
+  background-color: var(--background-color);
+  transition: background-color variables.$transition;
+  font-family: "Courier New", Courier, monospace;
+  color: var(--text-color);
+}
+
+:root,
+[data-theme="light"] {
+  --background-color: #f9fafb;
+  --primary-color: #ffffff;
+  --bg-muted: #e5e7eb;
+  --secondary-color: #d1d5db;
+  --text-color: #1f2937;
+  --accent-color: #2563eb;
+}
+
+[data-theme="dark"] {
+  --primary-color: #1f2937;
+  --background-color: #111827;
+  --bg-muted: #2b3441;
+  --secondary-color: #374151;
+  --text-color: #f3f4f6;
+  --accent-color: #568ed3;
+}
