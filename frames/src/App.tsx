@@ -41,6 +41,7 @@ function App() {
         }}
       >
         Frame Composer
+        {/* XXX Custom component, so we can have clear */}
         <input
           style={{ width: "150px", margin: "0" }}
           type="text"
@@ -68,6 +69,8 @@ function App() {
         <FileSelect
           labelNode="load"
           onChange={async (file) => {
+            setFileName(file.name);
+
             const data = await file.text();
 
             const object = JSON.parse(data) as IJsonConfig;
