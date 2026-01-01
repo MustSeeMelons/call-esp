@@ -5,8 +5,17 @@ export const saveAsJson = (data: unknown, filename = "frames.json") => {
 
   const link = document.createElement("a");
   link.href = url;
-  link.download = filename;
+  link.download = (() => {
+    if (!filename.endsWith(".json")) {
+      filename = `${filename}.json`;
+    }
+
+    return filename;
+  })();
+
   link.click();
 
   URL.revokeObjectURL(url);
 };
+
+export const SMOL_DELAY = 50;

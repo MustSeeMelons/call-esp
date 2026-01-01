@@ -3,11 +3,18 @@ import "./App.scss";
 import { Frame, type IFrameApi } from "./components/frame/frame";
 import { ThemeProvider } from "./context/theme-context";
 import { Letters } from "./components/letters/letters";
-import { saveAsJson } from "./utils";
+import { saveAsJson, SMOL_DELAY } from "./utils";
 import { v4 } from "uuid";
 import React from "react";
+import { FileSelect } from "./components/file-select/file-select";
+
+interface IJsonConfig {
+  results: number[][];
+}
 
 function App() {
+  const [fileName, setFileName] = useState("frames.json");
+
   const [frames, setFrames] = useState<{ id: string }[]>([{ id: v4() }]);
   const frameApis = useRef(
     new Map<string, React.RefObject<IFrameApi | null>>()
@@ -21,14 +28,25 @@ function App() {
     return frameApis.current.get(id)!;
   };
 
-  // TODO load as JSON
-
   return (
     <ThemeProvider>
       <h1>Letters</h1>
       <Letters />
-      <h1 style={{ display: "flex", alignItems: "center", columnGap: "10px" }}>
+      <h1
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "start",
+          columnGap: "10px",
+        }}
+      >
         Frame Composer
+        <input
+          style={{ width: "150px", margin: "0" }}
+          type="text"
+          value={fileName}
+          onChange={(e) => setFileName(e.target.value)}
+        />
         <button
           onClick={() => {
             const results: number[][] = [];
@@ -40,13 +58,35 @@ function App() {
               }
             });
 
-            const json = JSON.stringify({ results: results });
-            saveAsJson(json);
+            const json = { results: results };
+
+            saveAsJson(json, fileName);
           }}
         >
           save
         </button>
-        <button>load</button>
+        <FileSelect
+          labelNode="load"
+          onChange={async (file) => {
+            const data = await file.text();
+
+            const object = JSON.parse(data) as IJsonConfig;
+
+            setFrames([]);
+            frameApis.current.clear();
+
+            object.results.forEach((frame) => {
+              const id = v4();
+
+              setFrames((p) => [...p, { id }]);
+              const api = getFrameApi(id);
+
+              setTimeout(() => {
+                api.current?.setData(frame);
+              }, SMOL_DELAY);
+            });
+          }}
+        />
       </h1>
       <p>Do a counter-clock-wise rotation when done!</p>
       <div style={{ rowGap: "20px", display: "flex", flexDirection: "column" }}>
@@ -118,7 +158,7 @@ function App() {
               frameApis.current
                 .get(nextId)
                 ?.current?.setData(nums.map((n) => Number(n)));
-            }, 50);
+            }, SMOL_DELAY);
           }}
         >
           paste frame
