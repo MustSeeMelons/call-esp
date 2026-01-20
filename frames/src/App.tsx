@@ -8,12 +8,14 @@ import { v4 } from "uuid";
 import React from "react";
 import { FileSelect } from "./components/file-select/file-select";
 
+const DEF_FILENAME = "frames.json";
+
 interface IJsonConfig {
   results: number[][];
 }
 
 function App() {
-  const [fileName, setFileName] = useState("frames.json");
+  const [fileName, setFileName] = useState(DEF_FILENAME);
 
   const [frames, setFrames] = useState<{ id: string }[]>([{ id: v4() }]);
   const frameApis = useRef(
@@ -90,49 +92,65 @@ function App() {
             });
           }}
         />
+        <button
+          onClick={() => {
+            setFrames([{ id: v4() }]);
+            frameApis.current.clear();
+            setFileName(DEF_FILENAME);
+          }}
+        >
+          reset
+        </button>
       </h1>
       <p>Do a counter-clock-wise rotation when done!</p>
       <div style={{ rowGap: "20px", display: "flex", flexDirection: "column" }}>
-        {frames.map((f, idx) => {
+        {frames.map((frame, idx) => {
           return (
-            <Frame
-              key={f.id}
-              api={getFrameApi(f.id)}
-              deleteCallback={() => {
-                setFrames((p) => p.filter((v) => v.id !== f.id));
-                frameApis.current.delete(f.id);
-              }}
-              moveBefore={() => {
-                if (frames.length < 2) {
-                  return;
-                }
+            <div key={frame.id}>
+              <p style={{ margin: "0", marginBottom: "5px" }}>
+                Frame {idx + 1}
+              </p>
+              <Frame
+                api={getFrameApi(frame.id)}
+                deleteCallback={() => {
+                  setFrames((p) => p.filter((v) => v.id !== frame.id));
 
-                setFrames((p) => {
-                  const c = [...p];
+                  setTimeout(() => {
+                    frameApis.current.delete(frame.id);
+                  }, SMOL_DELAY);
+                }}
+                moveBefore={() => {
+                  if (frames.length < 2) {
+                    return;
+                  }
 
-                  const target = (idx - 1 + frames.length) % frames.length;
+                  setFrames((p) => {
+                    const c = [...p];
 
-                  [c[idx], c[target]] = [c[target], c[idx]];
+                    const target = (idx - 1 + frames.length) % frames.length;
 
-                  return c;
-                });
-              }}
-              moveAfer={() => {
-                if (frames.length < 2) {
-                  return;
-                }
+                    [c[idx], c[target]] = [c[target], c[idx]];
 
-                setFrames((p) => {
-                  const c = [...p];
+                    return c;
+                  });
+                }}
+                moveAfer={() => {
+                  if (frames.length < 2) {
+                    return;
+                  }
 
-                  const target = (idx + 1 + frames.length) % frames.length;
+                  setFrames((p) => {
+                    const c = [...p];
 
-                  [c[target], c[idx]] = [c[idx], c[target]];
+                    const target = (idx + 1 + frames.length) % frames.length;
 
-                  return c;
-                });
-              }}
-            />
+                    [c[target], c[idx]] = [c[idx], c[target]];
+
+                    return c;
+                  });
+                }}
+              />
+            </div>
           );
         })}
       </div>

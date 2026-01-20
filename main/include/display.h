@@ -13,6 +13,7 @@ typedef struct {
     uint8_t **frame;
     size_t count;
     int active;
+    uint16_t frame_delay;
 } anim_t;
 
 // Logic path how to handle the display

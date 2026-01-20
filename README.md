@@ -1,32 +1,24 @@
-# _Sample project_
+# Call ESP
 
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+A LILYGO T-Call project for automating pesky phone call to open gates.
 
-This is the simplest buildable example. The example is used by command `idf.py create-project`
-that copies the project to user specified path and set it's name. For more information follow the [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project)
+Has a SPI connected 8x8 LED matrix for text and animations.
 
+Listens to specific BLE ad messages and performs the phone calls.
 
+Runs off USB power. Perfect for car use.
 
-## How to use example
-We encourage the users to use the example as a template for the new projects.
-A recommended way is to follow the instructions on a [docs page](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html#start-a-new-project).
+**TODO:** Link the button repo which uses a NRF52840 to broadcast ads on button press. That still needs some work.
+**TODO:** Add some pics.
 
-## Example folder contents
+# Text
 
-The project **sample_project** contains one source file in C language [main.c](main/main.c). The file is located in folder [main](main).
+`letters.c` defiens all the letters and text. Extra symbols can be added as well.
 
-ESP-IDF projects are built using CMake. The project build configuration is contained in `CMakeLists.txt`
-files that provide set of directives and instructions describing the project's source files and targets
-(executable, library, or both). 
+# Anims
+Can be done in the React project in the `frames` directory, then each frames bytes can be copied and setup in the `anims.c` file following existing samples.
 
-Below is short explanation of remaining files in the project folder.
+# Phone numbers:
+- Rename `include/defs_sample.h` as `include/defs.h` and place the phone numbers into `PHONE_FIRST` and `PHONE_SECOND` 
+- Update `cmd_call_one` and `cmd_call_other` `cmd_len` property.
 
-```
-├── CMakeLists.txt
-├── main
-│   ├── CMakeLists.txt
-│   └── main.c
-└── README.md                  This is the file you are currently reading
-```
-Additionally, the sample project contains Makefile and component.mk files, used for the legacy Make based build system. 
-They are not used or needed when building with CMake and idf.py.

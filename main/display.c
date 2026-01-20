@@ -4,12 +4,13 @@
 #include "esp_log.h"
 #include "esp_rom_sys.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 #include "include/letters.h"
 #include "include/tasks_common.h"
 #include "include/util.h"
 #include "stdint.h"
 
-#define MOSI              23
+#define MOSI              22
 #define CLK               18 // Clock
 #define RCK               4  // Latch
 #define PIXEL_COUNT       8
@@ -19,13 +20,22 @@
 static const char *TAG = "DSP";
 
 static QueueHandle_t display_control_queue_handle;
+// For locking display changes
+SemaphoreHandle_t display_mutex;
 
 static spi_device_handle_t spi_handle;
 
 extern dsp_item_t t_welcome;
-extern dsp_anim_data circle;
-extern dsp_anim_data warning;
-extern dsp_anim_data ball;
+extern dsp_item_t t_error;
+extern dsp_item_t t_gate;
+extern dsp_item_t t_cool;
+
+extern dsp_anim_data breathe;
+extern dsp_anim_data wave;
+extern dsp_anim_data line;
+extern dsp_anim_data sync_line;
+extern dsp_anim_data load;
+extern dsp_anim_data standby;
 
 scroll_text_t scroll = {.letters = NULL, .count = 0, .scroll_pos = 0};
 anim_t anim = {.frame = NULL, .count = 0, .active = 0};
@@ -49,6 +59,8 @@ static esp_err_t init_latch() {
 }
 
 esp_err_t display_init() {
+    display_mutex = xSemaphoreCreateMutex();
+
     display_control_queue_handle = xQueueCreate(CONTROL_BUFF_SIZE, sizeof(uint8_t));
     esp_err_t err;
 
@@ -79,6 +91,28 @@ esp_err_t display_init() {
     return spi_bus_add_device(SPI2_HOST, &devcfg, &spi_handle);
 }
 
+static void display_update_scroll(dsp_item_t *text) {
+    scroll.letters = text->data.scroll.letters;
+    scroll.count = text->data.scroll.count;
+
+    int total_width = text->data.scroll.count - 1;
+
+    for (size_t i = 0; i < text->data.scroll.count; i++) {
+        total_width += letter_get_len(text->data.scroll.letters[i]);
+    }
+
+    scroll.scroll_pos = total_width + PIXEL_COUNT;
+    mode = text->dsp_mode;
+}
+
+static void display_update_anim(dsp_anim_data *anim_data) {
+    anim.frame = anim_data->frame;
+    anim.count = anim_data->count;
+    anim.active = 0;
+    anim.frame_delay = 0;
+    mode = DSP_FRAME_ANIM;
+}
+
 // Set mode & other variables
 static void display_control_task(void *pvParameter) {
     ESP_LOGI(TAG, "Display Control listening");
@@ -87,34 +121,41 @@ static void display_control_task(void *pvParameter) {
 
     for (;;) {
         if (xQueueReceive(display_control_queue_handle, &message, portMAX_DELAY)) {
+
             switch (message) {
-            case 0:
-                scroll.letters = t_welcome.data.scroll.letters;
-                scroll.count = t_welcome.data.scroll.count;
-
-                int total_width = t_welcome.data.scroll.count - 1;
-
-                for (size_t i = 0; i < t_welcome.data.scroll.count; i++) {
-                    total_width += letter_get_len(t_welcome.data.scroll.letters[i]);
-                }
-
-                scroll.scroll_pos = total_width + PIXEL_COUNT;
-                mode = t_welcome.dsp_mode;
+            case e_welcome:
+                display_update_scroll(&t_welcome);
                 break;
-            case 1:
-                anim.frame = circle.frame;
-                anim.count = circle.count;
-                mode = DSP_FRAME_ANIM;
+            case e_breathe:
+                display_update_anim(&breathe);
                 break;
-            case 2:
-                anim.frame = warning.frame;
-                anim.count = warning.count;
-                mode = DSP_FRAME_ANIM;
+            case e_wave:
+                display_update_anim(&wave);
                 break;
-            case 3:
-                anim.frame = ball.frame;
-                anim.count = ball.count;
-                mode = DSP_FRAME_ANIM;
+            case e_line:
+                display_update_anim(&line);
+                anim.frame_delay = 42;
+                break;
+            case e_sync_line:
+                display_update_anim(&sync_line);
+                anim.frame_delay = 42;
+                break;
+            case e_load:
+                display_update_anim(&load);
+                anim.frame_delay = 60;
+                break;
+            case e_error:
+                display_update_scroll(&t_error);
+                break;
+            case e_gate:
+                display_update_scroll(&t_gate);
+                break;
+            case e_cool:
+                display_update_scroll(&t_cool);
+                break;
+            case e_standby:
+                display_update_anim(&standby);
+                anim.frame_delay = 100;
                 break;
             }
         }
@@ -210,7 +251,7 @@ static void display_run_task(void *pvParameter) {
                 gpio_set_level(RCK, 1);
                 gpio_set_level(RCK, 0);
 
-                vTaskDelay(pdMS_TO_TICKS(5));
+                vTaskDelay(pdMS_TO_TICKS(1));
             }
             break;
         case DSP_TEXT_SCROLL:
@@ -251,6 +292,7 @@ void update_scroll(scroll_text_t *text) {
 
 void update_anim(anim_t *anim) {
     anim->active++;
+
     if (anim->active >= anim->count) {
         anim->active = 0;
     }
@@ -264,7 +306,8 @@ static void display_ticker_task(void *pvParameter) {
             update_scroll(&scroll);
             break;
         case DSP_FRAME_ANIM:
-            vTaskDelay(pdMS_TO_TICKS(FPS_6_DELAY));
+            uint16_t delay = anim.frame_delay != 0 ? anim.frame_delay : FPS_6_DELAY;
+            vTaskDelay(pdMS_TO_TICKS(delay));
             update_anim(&anim);
             break;
         default:

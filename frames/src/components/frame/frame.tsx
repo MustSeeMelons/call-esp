@@ -25,6 +25,22 @@ export const Frame: React.FC<IFrameProps> = ({
     new Array(PIXEL_COUNT).fill(0)
   );
 
+  const [isMouseDown, setMouseDown] = useState(false);
+
+  // XXX move this into a seperate hook so each frame does not add listeners
+  useEffect(() => {
+    const onMouseDown = () => setMouseDown(true);
+    const onMouseUp = () => setMouseDown(false);
+
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("mouseup", onMouseUp);
+
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+  }, []);
+
   useEffect(() => {
     if (!api) {
       return;
@@ -42,26 +58,34 @@ export const Frame: React.FC<IFrameProps> = ({
     for (let i = 0; i < PIXEL_COUNT; i++) {
       const v = (value >> i) & 1;
 
+      const setHandler = (currRows: number[]) => {
+        return currRows.map((currRow, currRowIdx) => {
+          if (currRowIdx === rowIdx) {
+            if (v === 0) {
+              const mask = 1 << i;
+              return currRow | mask;
+            } else {
+              const mask = ~(1 << i);
+              return currRow & mask;
+            }
+          } else {
+            return currRow;
+          }
+        });
+      };
+
       results.push(
         <div
           key={`${rowIdx}-${value}-${i}`}
           className={`pixel${v ? " pixel-active" : ""}`}
+          onMouseDown={() => setFrameRows(setHandler)}
+          onMouseEnter={() => {
+            if (isMouseDown) {
+              setFrameRows(setHandler);
+            }
+          }}
           onClick={() => {
-            setFrameRows((currRows) => {
-              return currRows.map((currRow, currRowIdx) => {
-                if (currRowIdx === rowIdx) {
-                  if (v === 0) {
-                    const mask = 1 << i;
-                    return currRow | mask;
-                  } else {
-                    const mask = ~(1 << i);
-                    return currRow & mask;
-                  }
-                } else {
-                  return currRow;
-                }
-              });
-            });
+            setFrameRows(setHandler);
           }}
         />
       );
