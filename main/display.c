@@ -20,8 +20,6 @@
 static const char *TAG = "DSP";
 
 static QueueHandle_t display_control_queue_handle;
-// For locking display changes
-SemaphoreHandle_t display_mutex;
 
 static spi_device_handle_t spi_handle;
 
@@ -59,8 +57,6 @@ static esp_err_t init_latch() {
 }
 
 esp_err_t display_init() {
-    display_mutex = xSemaphoreCreateMutex();
-
     display_control_queue_handle = xQueueCreate(CONTROL_BUFF_SIZE, sizeof(uint8_t));
     esp_err_t err;
 
