@@ -1,0 +1,23 @@
+@use "../../variables.scss";
+
+.playback {
+  background-color: red;
+}
+
+.frame {
+  display: flex;
+  flex-direction: column;
+  row-gap: 5px;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  column-gap: 5px;
+}
+
+.pixel {
+  width: 20px;
+  height: 20px;
+  background-color: var(--secondary-color);
+}

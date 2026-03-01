@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import "./frame.scss";
-
-const PIXEL_COUNT = 8;
+import { PIXEL_COUNT } from "../../definitions";
 
 export interface IFrameApi {
   getData: () => number[];
@@ -22,7 +21,7 @@ export const Frame: React.FC<IFrameProps> = ({
   moveBefore,
 }) => {
   const [frameRows, setFrameRows] = useState<number[]>(
-    new Array(PIXEL_COUNT).fill(0)
+    new Array(PIXEL_COUNT).fill(0),
   );
 
   const [isMouseDown, setMouseDown] = useState(false);
@@ -87,7 +86,7 @@ export const Frame: React.FC<IFrameProps> = ({
           onClick={() => {
             setFrameRows(setHandler);
           }}
-        />
+        />,
       );
     }
 

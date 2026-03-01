@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import "./App.scss";
 import { Frame, type IFrameApi } from "./components/frame/frame";
 import { ThemeProvider } from "./context/theme-context";
@@ -7,6 +7,13 @@ import { saveAsJson, SMOL_DELAY } from "./utils";
 import { v4 } from "uuid";
 import React from "react";
 import { FileSelect } from "./components/file-select/file-select";
+import { FaCirclePlay } from "react-icons/fa6";
+import { FaSave } from "react-icons/fa";
+import { GrPowerReset } from "react-icons/gr";
+import { CiImport } from "react-icons/ci";
+import { useModal } from "./context/modal-context-provider";
+import { ModalContainer } from "./components/modal-container/modal-container";
+import { Playback } from "./components/playback/playback";
 
 const DEF_FILENAME = "frames.json";
 
@@ -16,10 +23,10 @@ interface IJsonConfig {
 
 function App() {
   const [fileName, setFileName] = useState(DEF_FILENAME);
-
+  const { pushModal } = useModal();
   const [frames, setFrames] = useState<{ id: string }[]>([{ id: v4() }]);
   const frameApis = useRef(
-    new Map<string, React.RefObject<IFrameApi | null>>()
+    new Map<string, React.RefObject<IFrameApi | null>>(),
   );
 
   const getFrameApi = (id: string) => {
@@ -30,8 +37,22 @@ function App() {
     return frameApis.current.get(id)!;
   };
 
+  const gatherAllFrames = useCallback(() => {
+    const results: number[][] = [];
+
+    frameApis.current.forEach((f) => {
+      const config = f.current?.getData();
+      if (config) {
+        results.push(config);
+      }
+    });
+
+    return results;
+  }, [frameApis]);
+
   return (
     <ThemeProvider>
+      <ModalContainer />
       <h1>Letters</h1>
       <Letters />
       <h1
@@ -51,6 +72,14 @@ function App() {
           onChange={(e) => setFileName(e.target.value)}
         />
         <button
+          onClick={() =>
+            pushModal("preview", <Playback frames={gatherAllFrames()} />)
+          }
+        >
+          <FaCirclePlay />
+          preview
+        </button>
+        <button
           onClick={() => {
             const results: number[][] = [];
 
@@ -66,10 +95,22 @@ function App() {
             saveAsJson(json, fileName);
           }}
         >
+          <FaSave />
           save
         </button>
         <FileSelect
-          labelNode="load"
+          labelNode={
+            <div
+              style={{
+                display: "flex",
+                columnGap: "5px",
+                alignItems: "center",
+              }}
+            >
+              <CiImport size={16} />
+              load
+            </div>
+          }
           onChange={async (file) => {
             setFileName(file.name);
 
@@ -99,6 +140,7 @@ function App() {
             setFileName(DEF_FILENAME);
           }}
         >
+          <GrPowerReset />
           reset
         </button>
       </h1>

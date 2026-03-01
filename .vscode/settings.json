@@ -27,5 +27,6 @@
     "stdio.h": "c"
   },
   "idf.flashType": "UART",
-  "idf.port": "/dev/ttyACM1"
+  "idf.port": "/dev/ttyACM1",
+  "idf.currentSetup": "C:/Espressif/frameworks/esp-idf-v5.3.1/"
 }
