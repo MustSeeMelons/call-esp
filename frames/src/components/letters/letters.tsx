@@ -6,7 +6,7 @@ export const Letters = () => {
 
   return (
     <div className="letters">
-      <div className="from-control">
+      <div className="form-control">
         <label htmlFor="offset">Offset:</label>
         <input
           id="offset"
@@ -27,8 +27,8 @@ export const Letters = () => {
         />
       </div>
 
-      <div className="from-control">
-        <label htmlFor="len">Lenght:</label>
+      <div className="form-control">
+        <label htmlFor="len">Length:</label>
         <input
           id="len"
           type="text"
@@ -47,9 +47,9 @@ export const Letters = () => {
         />
       </div>
 
-      <div className="from-control" style={{ columnGap: "10px" }}>
+      <div className="form-control" style={{ columnGap: "10px" }}>
         <input
-          id="reesult"
+          id="result"
           disabled
           value={`0x${combination.toString(16)}`}
           style={{ textAlign: "right" }}

@@ -1,44 +1,34 @@
 import { useEffect, useState } from "react";
 import "./frame.scss";
 import { PIXEL_COUNT } from "../../definitions";
+import { rotateArrayClockwise, rotateArrayCounterClockwise } from "../../utils";
+import { useMouseDown } from "../../hooks/useMouseDown";
 
 export interface IFrameApi {
   getData: () => number[];
   setData: (data: number[]) => void;
+  rotateClockwise: () => void;
+  rotateCounterClockwise: () => void;
 }
 
 export interface IFrameProps {
   api?: React.RefObject<IFrameApi | null>;
   deleteCallback: () => void;
   moveBefore: () => void;
-  moveAfer: () => void;
+  moveAfter: () => void;
 }
 
 export const Frame: React.FC<IFrameProps> = ({
   api,
   deleteCallback,
-  moveAfer,
+  moveAfter,
   moveBefore,
 }) => {
   const [frameRows, setFrameRows] = useState<number[]>(
     new Array(PIXEL_COUNT).fill(0),
   );
 
-  const [isMouseDown, setMouseDown] = useState(false);
-
-  // XXX move this into a seperate hook so each frame does not add listeners
-  useEffect(() => {
-    const onMouseDown = () => setMouseDown(true);
-    const onMouseUp = () => setMouseDown(false);
-
-    document.addEventListener("mousedown", onMouseDown);
-    document.addEventListener("mouseup", onMouseUp);
-
-    return () => {
-      document.removeEventListener("mousedown", onMouseDown);
-      document.removeEventListener("mouseup", onMouseUp);
-    };
-  }, []);
+  const isMouseDown = useMouseDown();
 
   useEffect(() => {
     if (!api) {
@@ -48,6 +38,9 @@ export const Frame: React.FC<IFrameProps> = ({
     api.current = {
       getData: () => frameRows,
       setData: (data) => setFrameRows(data),
+      rotateClockwise: () => setFrameRows(rotateArrayClockwise(frameRows)),
+      rotateCounterClockwise: () =>
+        setFrameRows(rotateArrayCounterClockwise(frameRows)),
     };
   });
 
@@ -94,7 +87,7 @@ export const Frame: React.FC<IFrameProps> = ({
   };
 
   const shiftLeft = () => {
-    setFrameRows((currRows) => currRows.map((row) => row >> 1));
+    setFrameRows((currRows) => currRows.map((row) => (row >> 1) & 0xff));
   };
 
   const shiftDown = () => {
@@ -116,41 +109,15 @@ export const Frame: React.FC<IFrameProps> = ({
   };
 
   const shiftRight = () => {
-    setFrameRows((currRows) => currRows.map((row) => row << 1));
+    setFrameRows((currRows) => currRows.map((row) => (row << 1) & 0xff));
   };
 
   const clockWise = () => {
-    const newRows = new Array(PIXEL_COUNT).fill(0);
-
-    for (let row = 0; row < PIXEL_COUNT; row++) {
-      for (let col = 0; col < PIXEL_COUNT; col++) {
-        const bit = (frameRows[row] >> col) & 1;
-
-        if (bit) {
-          // The first row is the last column, the last row is the first column
-          newRows[col] |= 1 << (7 - row);
-        }
-      }
-    }
-
-    return setFrameRows(newRows);
+    return setFrameRows(rotateArrayClockwise(frameRows));
   };
 
   const counterClockWise = () => {
-    const newRows = new Array(PIXEL_COUNT).fill(0);
-
-    for (let row = 0; row < PIXEL_COUNT; row++) {
-      for (let col = 0; col < PIXEL_COUNT; col++) {
-        const bit = (frameRows[row] >> col) & 1;
-
-        if (bit) {
-          // The last column becomes the first row
-          newRows[7 - col] |= 1 << row;
-        }
-      }
-    }
-
-    return setFrameRows(newRows);
+    return setFrameRows(rotateArrayCounterClockwise(frameRows));
   };
 
   return (
@@ -203,7 +170,7 @@ export const Frame: React.FC<IFrameProps> = ({
           className="gc4"
           onClick={(e) => {
             e.currentTarget.blur();
-            moveAfer();
+            moveAfter();
           }}
         >
           after

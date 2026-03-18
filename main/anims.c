@@ -181,3 +181,21 @@ uint8_t *standby_data[] = {blank,
                            blank};
 
 dsp_anim_data standby = {.count = sizeof(standby_data) / sizeof(standby_data[0]), .frame = standby_data};
+
+uint8_t duck_1[8] = {0, 0, 0, 0, 0, 0, 0, 52};
+uint8_t duck_2[8] = {0, 0, 0, 0, 0, 0, 52, 254};
+uint8_t duck_3[8] = {0, 0, 0, 0, 0, 52, 254, 58};
+uint8_t duck_4[8] = {0, 0, 0, 0, 52, 254, 58, 254};
+uint8_t duck_5[8] = {0, 0, 0, 52, 254, 58, 254, 48};
+uint8_t duck_6[8] = {0, 0, 52, 254, 58, 254, 48, 0};
+uint8_t duck_7[8] = {0, 52, 254, 58, 254, 48, 0, 0};
+uint8_t duck_8[8] = {52, 254, 58, 254, 48, 0, 0, 0};
+uint8_t duck_9[8] = {254, 58, 254, 48, 0, 0, 0, 0};
+uint8_t duck_10[8] = {58, 254, 48, 0, 0, 0, 0, 0};
+uint8_t duck_11[8] = {254, 48, 0, 0, 0, 0, 0, 0};
+uint8_t duck_12[8] = {48, 0, 0, 0, 0, 0, 0, 0};
+
+uint8_t *duck_data[] = {
+    blank, duck_1, duck_2, duck_3, duck_4, duck_5, duck_6, duck_7, duck_8, duck_9, duck_10, duck_11, duck_12, blank};
+
+dsp_anim_data duck = {.count = sizeof(duck_data) / sizeof(duck_data[0]), .frame = duck_data};

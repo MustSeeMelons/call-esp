@@ -61,6 +61,8 @@ function App() {
           alignItems: "center",
           justifyContent: "start",
           columnGap: "10px",
+          flexWrap: "wrap",
+          rowGap: "0.2rem",
         }}
       >
         Frame Composer
@@ -176,7 +178,7 @@ function App() {
                     return c;
                   });
                 }}
-                moveAfer={() => {
+                moveAfter={() => {
                   if (frames.length < 2) {
                     return;
                   }

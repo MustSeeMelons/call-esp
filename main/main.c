@@ -20,7 +20,7 @@ static const char *TAG = "Main";
 #define BUTTON_GPIO GPIO_NUM_12
 static QueueHandle_t gpio_evt_queue;
 
-static sim800_cmd_t cmd_reg = {.cmd = "AT+CREG?", .cmd_len = 8, .response = "0,1", .display_result = e_standby};
+static sim800_cmd_t cmd_reg = {.cmd = "AT+CREG?", .cmd_len = 8, .response = "0,1", .display_result = e_duck};
 
 static volatile bool isBeat = true; // Terrible name, but it will do
 

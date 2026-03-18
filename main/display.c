@@ -34,6 +34,7 @@ extern dsp_anim_data line;
 extern dsp_anim_data sync_line;
 extern dsp_anim_data load;
 extern dsp_anim_data standby;
+extern dsp_anim_data duck;
 
 scroll_text_t scroll = {.letters = NULL, .count = 0, .scroll_pos = 0};
 anim_t anim = {.frame = NULL, .count = 0, .active = 0};
@@ -152,6 +153,10 @@ static void display_control_task(void *pvParameter) {
             case e_standby:
                 display_update_anim(&standby);
                 anim.frame_delay = 100;
+                break;
+            case e_duck:
+                display_update_anim(&duck);
+                anim.frame_delay = 150;
                 break;
             }
         }

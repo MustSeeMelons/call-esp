@@ -26,9 +26,8 @@ static char rx_buffer[BUF_SIZE];
 static ring_buffer_t rx_ring_buffer;
 static QueueHandle_t sim800_cmd_queue;
 
-static sim800_cmd_t cmd_call_one = {.cmd = PHONE_FIRST, .cmd_len = 16, .response = "BUSY", .display_result = e_standby};
-static sim800_cmd_t cmd_call_other = {
-    .cmd = PHONE_SECOND, .cmd_len = 16, .response = "BUSY", .display_result = e_standby};
+static sim800_cmd_t cmd_call_one = {.cmd = PHONE_FIRST, .cmd_len = 16, .response = "BUSY", .display_result = e_duck};
+static sim800_cmd_t cmd_call_other = {.cmd = PHONE_SECOND, .cmd_len = 16, .response = "BUSY", .display_result = e_duck};
 
 // Power on sequence
 static void sim800l_power_on(void) {
@@ -43,9 +42,6 @@ static void sim800l_power_on(void) {
 
     vTaskDelay(pdMS_TO_TICKS(200));
     gpio_set_level(SIM_PWKEY, 0);
-
-    // Let the modem do its thing
-    vTaskDelay(pdMS_TO_TICKS(5000));
 }
 
 // Returns how many bytes to consume for a message if found

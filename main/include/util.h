@@ -17,7 +17,8 @@ typedef enum display_id
     e_error = 8,
     e_gate = 9,
     e_cool = 10,
-    e_standby = 11
+    e_standby = 11,
+    e_duck = 12,
 } display_id_t;
 
 #endif

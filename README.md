@@ -31,6 +31,10 @@ Yes, one of the connections was wrong so I had to jump it. The cad files are fix
 
 ![Alt text](/anim.jpg)
 
+![Alt text](/frame.png)
+
+The small animation tool.
+
 # Extras
 
 The SIM800L code should be real world tested for errors, for example if the sim card credit is 0 or it has expired.
